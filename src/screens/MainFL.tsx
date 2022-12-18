@@ -1,5 +1,5 @@
-import React from 'react';
-import {View, StyleSheet, Text, ImageBackground, TextInput, Pressable, Animated, Dimensions ,Alert, Image} from 'react-native';
+import React, {useRef} from 'react';
+import {View, StyleSheet, Text, ImageBackground, TextInput, Pressable, Animated, Dimensions ,Alert, Image, FlatList} from 'react-native';
 import styled from 'styled-components/native'
 import Icon from "react-native-vector-icons/Ionicons";
 import * as Location from 'expo-location';
@@ -11,6 +11,7 @@ import AppLoading from '../components/AppLoading';
 import Empty from "../components/Empty";
 import moment from "moment";
 import {StatusBar} from "expo-status-bar";
+import Pagination from "../components/Pagination";
 
 
 
@@ -22,9 +23,16 @@ const Main = () => {
   const [items, setItems] = React.useState<Weather[]>([])
   const [loading, setLoading] = React.useState<boolean>(false)
   const [city, setCity] = React.useState<string>('')
+  const scrollX = React.useRef(new Animated.Value(0)).current
+  const [index, setIndex] = React.useState(0)
+  const handleOnViewableItemsChanged = useRef(({viewableItems} :any) => {
+    setIndex(viewableItems[0].index)
+  }).current
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 50
+  }).current
 
-
-  const translateY: Animated.Value = new Animated.Value(10)
+  const translateY = new Animated.Value(10)
 
   Animated.timing(translateY, {
     toValue: 0,
@@ -106,16 +114,38 @@ const Main = () => {
     )
   }
 
-  return (
-    <View ><StatusBar style="light" backgroundColor="#00003B" />
-      <SwiperFlatList
-        data={items}
-        showPagination
 
-        paginationStyle={styles.pagination}
-        paginationStyleItem={{marginLeft: 0}}
-        paginationStyleItemInactive={{width: 8,height: 8, borderRadius: 3, backgroundColor: '#ffffff'}}
-        paginationStyleItemActive={{width: 8,height: 8, borderRadius: 3, backgroundColor: '#00003B'}}
+  const handleScroll = (event: any) => {
+
+    Animated.event([
+        {
+          nativeEvent: {
+            contentOffset: {
+              x: scrollX
+            }
+          }
+        }
+      ],
+      {
+        useNativeDriver: false
+      }
+    )(event)
+  }
+
+
+
+  return (
+    <View >
+      <StatusBar style="light" backgroundColor="#00003B" />
+      <FlatList
+        data={items}
+        showsHorizontalScrollIndicator={false}
+        horizontal={true}
+        pagingEnabled
+        snapToAlignment='center'
+        onScroll={handleScroll}
+        onViewableItemsChanged={handleOnViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         renderItem={({item}) => {
           let mainImg = item.weather[0].icon.includes('d') ? require('../../assets/main/day.jpeg') : require('../../assets/main/night.jpeg')
           let colorMode = item.weather[0].icon.includes('d') ? '#00003B' : '#ffffff'
@@ -130,7 +160,7 @@ const Main = () => {
             <MainBLock style={{width}}>
               <TopBlock>
                 <BlockImage source={mainImg} resizeMode='cover'>
-                  <View style={[styles.top]}>
+                  <Animated.View style={[styles.top, {transform: [{translateY: translateY}]}]}>
                     <TopText>
                       <Text style={{color: colorMode, fontSize: 30 }}>{objCity.name}</Text>
                       <Text style={{color: colorMode}}>{dateMoment}</Text>
@@ -139,7 +169,7 @@ const Main = () => {
                       <Text style={{color: colorMode, fontSize: 15}}>{dayMoment}</Text>
                       <Text style={{color: colorMode, fontSize: 15}}>{item.dt_txt.slice(11, -3)}</Text>
                     </View>
-                  </View>
+                  </Animated.View>
                   <ImageContent>
                     <Left>
                       <IconImage style={[{resizeMode: 'contain'}]} source={WeatherIcon[item.weather[0].icon]}/>
@@ -203,6 +233,7 @@ const Main = () => {
           )
         }}
       />
+      <Pagination data={items} scrollX={scrollX} index={index}/>
     </View>
   );
 };
@@ -228,15 +259,11 @@ const BlockContent = styled.View`
   padding: 20px;
 `
 const Top = styled.View`
-  padding: 0 20px;
-  flex-direction: row;
-  align-items: center;
-  margin-top: 50px;
-  justify-content: space-between;
+
 `
 
 const TopText = styled.View`
-
+  
 `
 
 const TopInput = styled.View`
@@ -253,6 +280,7 @@ const Input = styled.TextInput`
 `
 
 const Search = styled.Pressable`
+
 `
 const ImageContent = styled.View`
   margin-top: 60px;
@@ -262,7 +290,7 @@ const ImageContent = styled.View`
   justify-content: space-between;
 `
 const Left = styled.View`
-
+  
 `
 
 const GridBLock = styled.View`
@@ -276,7 +304,7 @@ const GridBLock = styled.View`
 const IconImage = styled.Image`
   width: 40px;
   height: 40px;
-
+  
 `
 const ImageContainer = styled.View`
   width: 60px;
