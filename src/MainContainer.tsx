@@ -34,12 +34,8 @@ function MainContainer() {
             borderRadius: 10,
           },
           tabBarStyle: {
+            position: 'static',
             backgroundColor: '#00003b',
-            borderRadius: 20,
-            width: '95%',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            marginBottom: 10,
             height: 70,
             paddingBottom: 10,
             paddingTop: 10,

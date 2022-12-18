@@ -1,5 +1,5 @@
 import React from 'react';
-import {View, StyleSheet, Text, ImageBackground, TextInput, Pressable, Animated, Dimensions ,Alert, Image} from 'react-native';
+import {View, StyleSheet, Text, ImageBackground, TextInput, Pressable, Animated, Dimensions ,Alert, RefreshControl, Image} from 'react-native';
 import styled from 'styled-components/native'
 import Icon from "react-native-vector-icons/Ionicons";
 import * as Location from 'expo-location';
@@ -15,7 +15,6 @@ import {StatusBar} from "expo-status-bar";
 
 
 const Main = () => {
-  const [visible, setVisible] = React.useState<boolean>(false)
   const [location, setLocation] = React.useState<Coord>();
   const [errorMsg, setErrorMsg] = React.useState('');
   const [objCity, setObjCity] = React.useState({})
@@ -72,6 +71,7 @@ const Main = () => {
   function getWeather() {
     setLoading(true)
     setTimeout(() => {
+      console.log(url)
       axios.get(url)
         .then(({data}) => {
 
@@ -86,12 +86,14 @@ const Main = () => {
         .finally(() => {
           setLoading(false)
         })
-    }, 100)
+    }, 200)
   }
 
   React.useEffect(() => {
     getCoord()
-    getWeather()
+    if(location?.coords.latitude !== undefined) {
+      getWeather()
+    }
   }, []);
 
   // Will change fadeAnim value to 0 in 3 seconds
@@ -111,7 +113,7 @@ const Main = () => {
       <SwiperFlatList
         data={items}
         showPagination
-
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={getWeather}/>}
         paginationStyle={styles.pagination}
         paginationStyleItem={{marginLeft: 0}}
         paginationStyleItemInactive={{width: 8,height: 8, borderRadius: 3, backgroundColor: '#ffffff'}}
@@ -130,14 +132,14 @@ const Main = () => {
             <MainBLock style={{width}}>
               <TopBlock>
                 <BlockImage source={mainImg} resizeMode='cover'>
-                  <View style={[styles.top]}>
+                  <View style={[styles.top, {flexDirection: "column", alignItems: 'flex-start'}]}>
                     <TopText>
                       <Text style={{color: colorMode, fontSize: 30 }}>{objCity.name}</Text>
                       <Text style={{color: colorMode}}>{dateMoment}</Text>
                     </TopText>
-                    <View style={{alignItems: 'flex-end'}}>
-                      <Text style={{color: colorMode, fontSize: 15}}>{dayMoment}</Text>
-                      <Text style={{color: colorMode, fontSize: 15}}>{item.dt_txt.slice(11, -3)}</Text>
+                    <View style={{flexDirection: 'row', marginTop: 10}}>
+                      <Text style={{color: colorMode, fontSize: 15}}>{dayMoment} - </Text>
+                      <Text style={{color: colorMode, fontSize: 15, fontWeight: 'bold'}}>{item.dt_txt.slice(11, -3)}</Text>
                     </View>
                   </View>
                   <ImageContent>
@@ -213,7 +215,7 @@ const MainBLock = styled.View`
   height: 100%
 `
 const TopBlock = styled.View`
-  height: 470px;
+  height: 500px;
 `
 const BlockImage = styled.ImageBackground`
   width: 100%;
