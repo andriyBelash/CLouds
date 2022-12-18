@@ -10,6 +10,7 @@ import { SwiperFlatList } from 'react-native-swiper-flatlist';
 import AppLoading from '../components/AppLoading';
 import Empty from "../components/Empty";
 import moment from "moment";
+import {StatusBar} from "expo-status-bar";
 
 
 
@@ -59,25 +60,15 @@ const Main = () => {
 
   let API_KEY = 'c154ff1f8b740d23f2ed0b5cd246b68e'
   let url: string = `https://api.openweathermap.org/data/2.5/forecast?lat=${location?.coords.latitude.toFixed(2)}&lon=${location?.coords.longitude.toFixed(2)}&appid=${API_KEY}&units=metric`
-  let dayUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${location?.coords.latitude.toFixed(2)}&lon=${location?.coords.longitude.toFixed(2)}&appid=${API_KEY}&units=metric`
 
   function getWeather() {
   setLoading(true)
     setTimeout(() => {
       axios.get(url)
         .then(({data}) => {
-          let day = new Date(Date.now())
-          const yyyy = day.getFullYear();
-          let mm: string | number = day.getMonth() + 1; // Months start at 0!
-          let dd: string | number = day.getDate();
-          if (dd < 10) dd = '0' + dd;
-          if (mm < 10) mm = '0' + mm;
-          const formattedToday = yyyy + '-' + mm + '-' + dd;
 
-          let res = data.list.filter((el: any)=>el.dt_txt.includes(formattedToday))
-          if(res[0]) {
-            setItems(res)
-          }
+          let res = data.list.slice(0, 5)
+          setItems(res)
           setObjCity(data.city)
         })
         .catch(e => {
@@ -90,35 +81,12 @@ const Main = () => {
     }, 100)
   }
 
-  function getDay() {
-    setLoading(true)
-    axios.get(dayUrl)
-      .then(({data}) => {
-        setItems([data])
-        console.log('ITEMS')
-        console.log()
-      })
-      .catch(e => {
-        setLoading(false)
-      })
-      .finally(() => {
-        setLoading(false)
-      })
-  }
   React.useEffect(() => {
     getCoord()
     getWeather()
   }, []);
 
     // Will change fadeAnim value to 0 in 3 seconds
-
-  const visibleInput = () => {
-    if (visible) {
-      setVisible(false)
-    } else {
-      setVisible(true)
-    }
-  }
 
   if(loading) {
     return <AppLoading/>
@@ -131,6 +99,7 @@ const Main = () => {
   }
 
   return (
+    <View ><StatusBar style="light" backgroundColor="#00003B" />
       <SwiperFlatList
         data={items}
         showPagination
@@ -220,9 +189,11 @@ const Main = () => {
                 </GridBLock>
               </BlockContent>
             </MainBLock>
+
           )
         }}
       />
+    </View>
   );
 };
 const { width } = Dimensions.get('window');
@@ -232,7 +203,7 @@ const MainBLock = styled.View`
   height: 100%
 `
 const TopBlock = styled.View`
-  height: 500px;
+  height: 470px;
 `
 const BlockImage = styled.ImageBackground`
   width: 100%;
